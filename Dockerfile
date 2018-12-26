@@ -1,6 +1,6 @@
-FROM ruby:2.4
+FROM ruby:2.2
 
-ENV HELPY_VERSION=master \
+ENV HELPY_VERSION=0.10.2 \
     RAILS_ENV=production \
     HELPY_HOME=/helpy \
     HELPY_USER=helpyuser \
@@ -8,7 +8,7 @@ ENV HELPY_VERSION=master \
 
 RUN apt-get update \
   && apt-get upgrade -y \
-  && apt-get install -y nodejs postgresql-client imagemagick --no-install-recommends \
+  && apt-get install -y nodejs postgresql-client --no-install-recommends \
   && rm -rf /var/lib/apt/lists/* \
   && useradd --no-create-home $HELPY_USER \
   && mkdir -p $HELPY_HOME \
@@ -20,9 +20,12 @@ USER $HELPY_USER
 
 RUN git clone --branch $HELPY_VERSION --depth=1 https://github.com/helpyio/helpy.git .
 
+# modify Gemfile to remove the line which says 'ruby "2.2.1"' to use a newer ruby version
+RUN sed -i '/ruby "2.2.1"/d' $HELPY_HOME/Gemfile
+
 # add the slack integration gem to the Gemfile if the HELPY_SLACK_INTEGRATION_ENABLED is true
 # use `test` for sh compatibility, also use only one `=`. also for sh compatibility
-RUN test "$HELPY_SLACK_INTEGRATION_ENABLED" = "true" && sed -i '128i\gem "helpy_slack", git: "https://github.com/helpyio/helpy_slack.git", branch: "master"' $HELPY_HOME/Gemfile
+RUN test "$HELPY_SLACK_INTEGRATION_ENABLED" = "true" && sed -i '$ a\gem "helpy_slack", github: "helpyio/helpy_slack", branch: "master"' $HELPY_HOME/Gemfile
 
 RUN bundle install
 
@@ -37,7 +40,7 @@ RUN mkdir -p $HELPY_HOME/public/assets && chown $HELPY_USER $HELPY_HOME/public/a
 
 VOLUME $HELPY_HOME/public
 
-COPY docker/database.yml $HELPY_HOME/config/database.yml
-COPY docker/run.sh $HELPY_HOME/run.sh
+COPY database.yml $HELPY_HOME/config/database.yml
+COPY run.sh $HELPY_HOME/run.sh
 
 CMD ["./run.sh"]
