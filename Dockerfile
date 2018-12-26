@@ -18,7 +18,7 @@ WORKDIR $HELPY_HOME
 
 USER $HELPY_USER
 
-RUN git clone --branch $HELPY_VERSION --depth=1 https://github.com/helpyio/helpy.git .
+RUN git clone --branch $HELPY_VERSION --depth=1 https://github.com/tomascastillo/helpy.git .
 
 # modify Gemfile to remove the line which says 'ruby "2.2.1"' to use a newer ruby version
 RUN sed -i '/ruby "2.2.1"/d' $HELPY_HOME/Gemfile
